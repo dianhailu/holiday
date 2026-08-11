@@ -179,8 +179,6 @@ def build_message(today: date, day_diff: int, holiday: Holiday) -> str:
             f"【中文】{zh_body}",
             "",
             f"【Indonesia】{id_body}",
-            "",
-            f"检查日期：{today.isoformat()} (WIB)",
         ]
     )
 
