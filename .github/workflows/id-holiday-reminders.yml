@@ -1,0 +1,44 @@
+name: Indonesia holiday Feishu reminders
+
+on:
+  schedule:
+    # 08:00 Asia/Jakarta (WIB, UTC+7) == 01:00 UTC
+    - cron: "0 1 * * *"
+  workflow_dispatch:
+    inputs:
+      today:
+        description: "Optional YYYY-MM-DD override (Jakarta date) for testing"
+        required: false
+        type: string
+      dry_run:
+        description: "Print only, do not post to Feishu"
+        required: false
+        type: boolean
+        default: false
+      include_joint_leave:
+        description: "Also remind for cuti bersama"
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run holiday notifier
+        env:
+          FEISHU_WEBHOOK_URL: ${{ secrets.FEISHU_WEBHOOK_URL }}
+          FEISHU_SECRET: ${{ secrets.FEISHU_SECRET }}
+          # workflow_dispatch inputs are empty on schedule runs
+          INCLUDE_JOINT_LEAVE: ${{ github.event.inputs.include_joint_leave || 'false' }}
+          DRY_RUN: ${{ github.event.inputs.dry_run || 'false' }}
+          TODAY_OVERRIDE: ${{ github.event.inputs.today }}
+        run: python3 scripts/id_holiday_feishu.py
