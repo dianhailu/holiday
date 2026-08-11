@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """Send Feishu reminders for Indonesian public holidays.
 
+Audience: China-based teammates who need to plan around Indonesia business downtime.
 Reminder offsets (relative to holiday date):
   +7 days, +1 day, 0 (today), -1 day (day after holiday).
 
-Timezone: Asia/Jakarta. Default run time is expected to be 08:00 WIB via cron.
+Timezone: Asia/Jakarta (WIB). Default schedule: 08:00 WIB via cron.
 """
 
 from __future__ import annotations
@@ -28,30 +29,56 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 DATA_DIR = REPO_ROOT / "data"
 
 # day_diff = holiday_date - today
+# Audience: China-based teammates monitoring Indonesia business operations.
 REMINDER_COPY = {
     7: {
-        "zh_title": "提前 7 天提醒",
-        "id_title": "Pengingat 7 hari sebelumnya",
-        "zh_body": "下周将迎来印尼法定假期，请提前安排工作与排班。",
-        "id_body": "Minggu depan ada hari libur nasional Indonesia. Mohon siapkan jadwal kerja lebih awal.",
+        "zh_title": "印尼业务假期 · 提前 7 天",
+        "id_title": "Libur bisnis ID · H-7",
+        "zh_body": (
+            "下周印尼侧法定放假，当地同事/客户/合作方响应会变慢。"
+            "请提前对齐印尼相关需求、排期、发货与会议，避免卡在假期窗口。"
+        ),
+        "id_body": (
+            "Minggu depan Indonesia libur nasional; respons lokal akan lebih lambat. "
+            "Mohon selaraskan kebutuhan, jadwal, pengiriman, dan rapat terkait Indonesia lebih awal."
+        ),
     },
     1: {
-        "zh_title": "明天放假提醒",
-        "id_title": "Pengingat sehari sebelumnya",
-        "zh_body": "明天是印尼法定假期，请今天完成收尾并设置自动回复。",
-        "id_body": "Besok adalah hari libur nasional Indonesia. Selesaikan pekerjaan hari ini dan aktifkan auto-reply.",
+        "zh_title": "印尼业务假期 · 明天",
+        "id_title": "Libur bisnis ID · H-1",
+        "zh_body": (
+            "明天印尼法定放假。请今天把需印尼侧配合的事项闭环，"
+            "并评估明日是否仍要推进跨时区会议、审批或关键交付。"
+        ),
+        "id_body": (
+            "Besok Indonesia libur nasional. Tutup hari ini hal yang butuh dukungan sisi Indonesia, "
+            "dan evaluasi rapat lintas zona waktu, approval, atau pengiriman kritis untuk besok."
+        ),
     },
     0: {
-        "zh_title": "今天放假提醒",
-        "id_title": "Pengingat hari ini",
-        "zh_body": "今天是印尼法定假期，请勿安排紧急会议或关键交付。",
-        "id_body": "Hari ini adalah hari libur nasional Indonesia. Hindari rapat mendesak atau pengiriman kritis.",
+        "zh_title": "印尼业务假期 · 今天",
+        "id_title": "Libur bisnis ID · hari ini",
+        "zh_body": (
+            "今天印尼法定放假，当地业务节奏会放缓。"
+            "请谨慎安排依赖印尼侧的紧急会议、审批、客服升级与关键交付；必要时改期或走备用方案。"
+        ),
+        "id_body": (
+            "Hari ini Indonesia libur nasional; ritme bisnis lokal melambat. "
+            "Hindari rapat, approval, eskalasi, atau pengiriman kritis yang bergantung pada sisi Indonesia; "
+            "jadwalkan ulang atau gunakan rencana cadangan bila perlu."
+        ),
     },
     -1: {
-        "zh_title": "假期后一天提醒",
-        "id_title": "Pengingat sehari setelah libur",
-        "zh_body": "印尼法定假期已结束，请恢复正常工作与考勤。",
-        "id_body": "Hari libur nasional Indonesia telah berakhir. Silakan kembali ke ritme kerja normal.",
+        "zh_title": "印尼业务假期 · 已结束",
+        "id_title": "Libur bisnis ID · selesai",
+        "zh_body": (
+            "印尼法定假期已结束，当地业务逐步恢复。"
+            "可继续推进印尼相关协作，并留意假期积压事项与回复延迟。"
+        ),
+        "id_body": (
+            "Libur nasional Indonesia telah berakhir; bisnis lokal mulai pulih. "
+            "Kolaborasi terkait Indonesia dapat dilanjutkan; perhatikan antrean kerja dan keterlambatan balasan pasca-libur."
+        ),
     },
 }
 
@@ -136,15 +163,14 @@ def build_message(today: date, day_diff: int, holiday: Holiday) -> str:
         [
             f"🇮🇩 {copy['zh_title']} / {copy['id_title']}",
             "",
-            f"【中文】{holiday.name_zh}（{type_zh}）",
-            f"日期：{holiday.date.isoformat()}",
-            copy["zh_body"],
+            f"假期：{holiday.name_zh}（{type_zh}）",
+            f"Tanggal: {holiday.date.isoformat()} · {holiday.name_id} ({type_id})",
             "",
-            f"【Indonesia】{holiday.name_id} ({type_id})",
-            f"Tanggal: {holiday.date.isoformat()}",
-            copy["id_body"],
+            f"【给中国同事】{copy['zh_body']}",
             "",
-            f"检查日期 / Tanggal cek: {today.isoformat()} (WIB)",
+            f"【Ringkasan】{copy['id_body']}",
+            "",
+            f"检查日期：{today.isoformat()} (WIB)",
         ]
     )
 
