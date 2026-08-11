@@ -19,11 +19,11 @@ import sys
 import urllib.error
 import urllib.request
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
-from zoneinfo import ZoneInfo
 
-TZ = ZoneInfo("Asia/Jakarta")
+# Fixed WIB offset so CI does not depend on tzdata / ZoneInfo databases.
+TZ = timezone(timedelta(hours=7))
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DATA_DIR = REPO_ROOT / "data"
 
@@ -155,7 +155,30 @@ def feishu_sign(secret: str, timestamp: str) -> str:
     return base64.b64encode(digest).decode("utf-8")
 
 
+def validate_webhook_url(webhook_url: str) -> None:
+    if not webhook_url.startswith("https://"):
+        raise RuntimeError("FEISHU_WEBHOOK_URL must start with https://")
+    if "hook" not in webhook_url:
+        raise RuntimeError(
+            "FEISHU_WEBHOOK_URL does not look like a Feishu/Lark bot webhook "
+            "(expected .../bot/v2/hook/...)."
+        )
+
+
+def explain_feishu_error(result: dict) -> str:
+    code = result.get("code", result.get("StatusCode"))
+    hints = {
+        19021: "签名校验失败：机器人若开启了签名，请把密钥配到 FEISHU_SECRET；若未开启，请删除该 Secret。",
+        19022: "时间戳无效或过期：请确认 Actions runner 时间正常，并重试。",
+        19024: "Webhook 地址无效或机器人已被移除：请重新复制群机器人 Webhook。",
+        11232: "消息内容被拦截：请检查文案是否触发了飞书安全关键词。",
+    }
+    hint = hints.get(code, "请检查 FEISHU_WEBHOOK_URL / FEISHU_SECRET 是否配置正确。")
+    return f"Feishu API error: {result}. Hint: {hint}"
+
+
 def post_feishu(text: str, webhook_url: str, secret: str | None) -> None:
+    validate_webhook_url(webhook_url)
     payload: dict = {
         "msg_type": "text",
         "content": {"text": text},
@@ -177,6 +200,8 @@ def post_feishu(text: str, webhook_url: str, secret: str | None) -> None:
     except urllib.error.HTTPError as exc:
         detail = exc.read().decode("utf-8", errors="replace")
         raise RuntimeError(f"Feishu HTTP {exc.code}: {detail}") from exc
+    except urllib.error.URLError as exc:
+        raise RuntimeError(f"Feishu request failed: {exc}") from exc
 
     try:
         result = json.loads(body)
@@ -186,7 +211,7 @@ def post_feishu(text: str, webhook_url: str, secret: str | None) -> None:
     # Feishu custom bots usually return {"code":0,"msg":"success"}
     code = result.get("code", result.get("StatusCode"))
     if code not in (0, None):
-        raise RuntimeError(f"Feishu API error: {result}")
+        raise RuntimeError(explain_feishu_error(result))
 
 
 def env_flag(name: str) -> bool:
@@ -198,17 +223,23 @@ def main() -> int:
     include_joint_leave = args.include_joint_leave or env_flag("INCLUDE_JOINT_LEAVE")
     dry_run = args.dry_run or env_flag("DRY_RUN")
 
-    today = resolve_today(args.today or os.getenv("TODAY_OVERRIDE"))
+    today_raw = (args.today or os.getenv("TODAY_OVERRIDE") or "").strip() or None
+    today = resolve_today(today_raw)
     years = {today.year, (today + timedelta(days=7)).year, (today - timedelta(days=1)).year}
     holidays = load_holidays_for_years(years, include_joint_leave=include_joint_leave)
     matches = matched_reminders(today, holidays)
 
+    webhook_url = os.getenv("FEISHU_WEBHOOK_URL", "").strip()
+    secret = os.getenv("FEISHU_SECRET", "").strip() or None
+    print(
+        f"debug: today={today.isoformat()} dry_run={dry_run} "
+        f"webhook_set={bool(webhook_url)} secret_set={bool(secret)} "
+        f"matches={len(matches)} holidays_loaded={len(holidays)}"
+    )
+
     if not matches:
         print(f"No holiday reminders for {today.isoformat()} (WIB).")
         return 0
-
-    webhook_url = os.getenv("FEISHU_WEBHOOK_URL", "").strip()
-    secret = os.getenv("FEISHU_SECRET", "").strip() or None
 
     if not dry_run and not webhook_url:
         print("FEISHU_WEBHOOK_URL is required unless --dry-run is set.", file=sys.stderr)
@@ -220,7 +251,11 @@ def main() -> int:
         print(text)
         if dry_run:
             continue
-        post_feishu(text, webhook_url, secret)
+        try:
+            post_feishu(text, webhook_url, secret)
+        except Exception as exc:
+            print(f"ERROR: {exc}", file=sys.stderr)
+            return 1
         print("posted: ok")
 
     return 0
