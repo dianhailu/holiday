@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Send Feishu reminders for Indonesian public holidays.
 
-Audience: China-based teammates who need to plan around Indonesia business downtime.
+Audience: China-based teammates monitoring Indonesia business and data.
 Reminder offsets (relative to holiday date):
-  +7 days, +1 day, 0 (today), -1 day (day after holiday).
+  +30, +7, +1, 0 (today), -1 (day after holiday).
 
 Timezone: Asia/Jakarta (WIB). Default schedule: 08:00 WIB via cron.
 """
@@ -28,58 +28,17 @@ TZ = timezone(timedelta(hours=7))
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DATA_DIR = REPO_ROOT / "data"
 
+# Monday=0 ... Sunday=6
+WEEKDAY_ZH = ("周一", "周二", "周三", "周四", "周五", "周六", "周日")
+WEEKDAY_ID = ("Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu")
+
 # day_diff = holiday_date - today
-# Audience: China-based teammates monitoring Indonesia business operations.
-REMINDER_COPY = {
-    7: {
-        "zh_title": "印尼业务假期 · 提前 7 天",
-        "id_title": "Libur bisnis ID · H-7",
-        "zh_body": (
-            "下周印尼侧法定放假，当地同事/客户/合作方响应会变慢。"
-            "请提前对齐印尼相关需求、排期、发货与会议，避免卡在假期窗口。"
-        ),
-        "id_body": (
-            "Minggu depan Indonesia libur nasional; respons lokal akan lebih lambat. "
-            "Mohon selaraskan kebutuhan, jadwal, pengiriman, dan rapat terkait Indonesia lebih awal."
-        ),
-    },
-    1: {
-        "zh_title": "印尼业务假期 · 明天",
-        "id_title": "Libur bisnis ID · H-1",
-        "zh_body": (
-            "明天印尼法定放假。请今天把需印尼侧配合的事项闭环，"
-            "并评估明日是否仍要推进跨时区会议、审批或关键交付。"
-        ),
-        "id_body": (
-            "Besok Indonesia libur nasional. Tutup hari ini hal yang butuh dukungan sisi Indonesia, "
-            "dan evaluasi rapat lintas zona waktu, approval, atau pengiriman kritis untuk besok."
-        ),
-    },
-    0: {
-        "zh_title": "印尼业务假期 · 今天",
-        "id_title": "Libur bisnis ID · hari ini",
-        "zh_body": (
-            "今天印尼法定放假，当地业务节奏会放缓。"
-            "请谨慎安排依赖印尼侧的紧急会议、审批、客服升级与关键交付；必要时改期或走备用方案。"
-        ),
-        "id_body": (
-            "Hari ini Indonesia libur nasional; ritme bisnis lokal melambat. "
-            "Hindari rapat, approval, eskalasi, atau pengiriman kritis yang bergantung pada sisi Indonesia; "
-            "jadwalkan ulang atau gunakan rencana cadangan bila perlu."
-        ),
-    },
-    -1: {
-        "zh_title": "印尼业务假期 · 已结束",
-        "id_title": "Libur bisnis ID · selesai",
-        "zh_body": (
-            "印尼法定假期已结束，当地业务逐步恢复。"
-            "可继续推进印尼相关协作，并留意假期积压事项与回复延迟。"
-        ),
-        "id_body": (
-            "Libur nasional Indonesia telah berakhir; bisnis lokal mulai pulih. "
-            "Kolaborasi terkait Indonesia dapat dilanjutkan; perhatikan antrean kerja dan keterlambatan balasan pasca-libur."
-        ),
-    },
+REMINDER_META = {
+    30: {"zh_title": "印尼业务假期 · 提前 30 天", "id_title": "Libur bisnis ID · H-30"},
+    7: {"zh_title": "印尼业务假期 · 提前 7 天", "id_title": "Libur bisnis ID · H-7"},
+    1: {"zh_title": "印尼业务假期 · 明天", "id_title": "Libur bisnis ID · H-1"},
+    0: {"zh_title": "印尼业务假期 · 今天", "id_title": "Libur bisnis ID · hari ini"},
+    -1: {"zh_title": "印尼业务假期 · 已结束", "id_title": "Libur bisnis ID · selesai"},
 }
 
 
@@ -140,7 +99,7 @@ def load_holidays_for_years(years: set[int], include_joint_leave: bool) -> list[
 
 
 def matched_reminders(today: date, holidays: list[Holiday]) -> list[tuple[int, Holiday]]:
-    wanted = set(REMINDER_COPY)
+    wanted = set(REMINDER_META)
     matches: list[tuple[int, Holiday]] = []
     for holiday in holidays:
         day_diff = (holiday.date - today).days
@@ -156,19 +115,70 @@ def type_label(holiday_type: str) -> tuple[str, str]:
     return "法定假期", "hari libur nasional"
 
 
+def weekday_zh(d: date) -> str:
+    return WEEKDAY_ZH[d.weekday()]
+
+
+def weekday_id(d: date) -> str:
+    return WEEKDAY_ID[d.weekday()]
+
+
+def build_bodies(day_diff: int, holiday: Holiday) -> tuple[str, str]:
+    """Return (zh_body, id_body) for the reminder stage."""
+    d = holiday.date.isoformat()
+    name = holiday.name_zh
+    wd = weekday_zh(holiday.date)
+    wd_id = weekday_id(holiday.date)
+
+    if day_diff == 30:
+        zh = f"{d}，印尼放假（{name}），请提前安排工作及关注业务变化。"
+        idn = (
+            f"{d}, Indonesia libur ({holiday.name_id}). "
+            "Mohon siapkan pekerjaan lebih awal dan pantau perubahan bisnis."
+        )
+    elif day_diff == 7:
+        zh = f"下周{wd}（{d}），印尼放假（{name}），请提前安排工作及关注业务变化。"
+        idn = (
+            f"Minggu depan {wd_id} ({d}), Indonesia libur ({holiday.name_id}). "
+            "Mohon siapkan pekerjaan lebih awal dan pantau perubahan bisnis."
+        )
+    elif day_diff == 1:
+        zh = f"明天（{wd}），印尼放假（{name}）；请关注业务变化及数据情况。"
+        idn = (
+            f"Besok ({wd_id}), Indonesia libur ({holiday.name_id}). "
+            "Mohon pantau perubahan bisnis dan kondisi data."
+        )
+    elif day_diff == 0:
+        zh = f"今天印尼放假（{name}）；请各部门关注当前业务变化及数据情况。"
+        idn = (
+            f"Hari ini Indonesia libur ({holiday.name_id}). "
+            "Mohon seluruh tim pantau perubahan bisnis dan kondisi data saat ini."
+        )
+    elif day_diff == -1:
+        zh = f"假期结束；请各部门关注昨天业务变化及数据情况。（假期：{name}，{d}）"
+        idn = (
+            f"Libur telah berakhir; mohon seluruh tim pantau perubahan bisnis "
+            f"dan kondisi data kemarin. (Libur: {holiday.name_id}, {d})"
+        )
+    else:
+        raise ValueError(f"unsupported day_diff: {day_diff}")
+    return zh, idn
+
+
 def build_message(today: date, day_diff: int, holiday: Holiday) -> str:
-    copy = REMINDER_COPY[day_diff]
+    meta = REMINDER_META[day_diff]
     type_zh, type_id = type_label(holiday.type)
+    zh_body, id_body = build_bodies(day_diff, holiday)
     return "\n".join(
         [
-            f"🇮🇩 {copy['zh_title']} / {copy['id_title']}",
+            f"🇮🇩 {meta['zh_title']} / {meta['id_title']}",
             "",
             f"假期：{holiday.name_zh}（{type_zh}）",
             f"Tanggal: {holiday.date.isoformat()} · {holiday.name_id} ({type_id})",
             "",
-            f"【给中国同事】{copy['zh_body']}",
+            f"【中文】{zh_body}",
             "",
-            f"【Ringkasan】{copy['id_body']}",
+            f"【Indonesia】{id_body}",
             "",
             f"检查日期：{today.isoformat()} (WIB)",
         ]
@@ -251,7 +261,11 @@ def main() -> int:
 
     today_raw = (args.today or os.getenv("TODAY_OVERRIDE") or "").strip() or None
     today = resolve_today(today_raw)
-    years = {today.year, (today + timedelta(days=7)).year, (today - timedelta(days=1)).year}
+    years = {
+        today.year,
+        (today + timedelta(days=30)).year,
+        (today - timedelta(days=1)).year,
+    }
     holidays = load_holidays_for_years(years, include_joint_leave=include_joint_leave)
     matches = matched_reminders(today, holidays)
 
