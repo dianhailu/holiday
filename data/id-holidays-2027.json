@@ -1,0 +1,162 @@
+{
+  "year": 2027,
+  "source": "SKB 3 Menteri Nomor 1205 Tahun 2026, Nomor 3 Tahun 2026, dan Nomor 2 Tahun 2026 tentang Hari Libur Nasional dan Cuti Bersama Tahun 2027 (ditetapkan 15 September 2026)",
+  "holidays": [
+    {
+      "date": "2027-01-01",
+      "name_id": "Tahun Baru Masehi",
+      "name_zh": "元旦",
+      "type": "national"
+    },
+    {
+      "date": "2027-01-05",
+      "name_id": "Isra Mikraj Nabi Muhammad SAW 1448 H",
+      "name_zh": "夜行登霄节",
+      "type": "national"
+    },
+    {
+      "date": "2027-02-06",
+      "name_id": "Tahun Baru Imlek 2578 Kongzili",
+      "name_zh": "农历新年",
+      "type": "national"
+    },
+    {
+      "date": "2027-03-08",
+      "name_id": "Hari Suci Nyepi (Tahun Baru Saka 1949)",
+      "name_zh": "静居日（塞迦历新年）",
+      "type": "national"
+    },
+    {
+      "date": "2027-03-10",
+      "name_id": "Hari Raya Idul Fitri 1448 H",
+      "name_zh": "开斋节",
+      "type": "national"
+    },
+    {
+      "date": "2027-03-11",
+      "name_id": "Hari Raya Idul Fitri 1448 H (hari ke-2)",
+      "name_zh": "开斋节（第2天）",
+      "type": "national"
+    },
+    {
+      "date": "2027-03-26",
+      "name_id": "Wafat Yesus Kristus",
+      "name_zh": "耶稣受难日",
+      "type": "national"
+    },
+    {
+      "date": "2027-03-28",
+      "name_id": "Kebangkitan Yesus Kristus (Paskah)",
+      "name_zh": "复活节",
+      "type": "national"
+    },
+    {
+      "date": "2027-05-01",
+      "name_id": "Hari Buruh Internasional",
+      "name_zh": "国际劳动节",
+      "type": "national"
+    },
+    {
+      "date": "2027-05-06",
+      "name_id": "Kenaikan Yesus Kristus",
+      "name_zh": "耶稣升天日",
+      "type": "national"
+    },
+    {
+      "date": "2027-05-17",
+      "name_id": "Hari Raya Idul Adha 1448 H",
+      "name_zh": "宰牲节",
+      "type": "national"
+    },
+    {
+      "date": "2027-05-20",
+      "name_id": "Hari Raya Waisak 2571 BE",
+      "name_zh": "卫塞节",
+      "type": "national"
+    },
+    {
+      "date": "2027-06-01",
+      "name_id": "Hari Lahir Pancasila",
+      "name_zh": "建国五原则日",
+      "type": "national"
+    },
+    {
+      "date": "2027-06-06",
+      "name_id": "1 Muharam Tahun Baru Islam 1449 H",
+      "name_zh": "伊斯兰新年",
+      "type": "national"
+    },
+    {
+      "date": "2027-08-15",
+      "name_id": "Maulid Nabi Muhammad SAW",
+      "name_zh": "圣纪节",
+      "type": "national"
+    },
+    {
+      "date": "2027-08-17",
+      "name_id": "Hari Proklamasi Kemerdekaan Republik Indonesia",
+      "name_zh": "独立日",
+      "type": "national"
+    },
+    {
+      "date": "2027-12-25",
+      "name_id": "Hari Raya Natal",
+      "name_zh": "圣诞节",
+      "type": "national"
+    },
+    {
+      "date": "2027-12-26",
+      "name_id": "Isra Mikraj Nabi Muhammad SAW 1449 H",
+      "name_zh": "夜行登霄节",
+      "type": "national"
+    },
+    {
+      "date": "2027-02-05",
+      "name_id": "Cuti Bersama Tahun Baru Imlek",
+      "name_zh": "农历新年集体假期",
+      "type": "joint_leave"
+    },
+    {
+      "date": "2027-03-09",
+      "name_id": "Cuti Bersama Idul Fitri",
+      "name_zh": "开斋节集体假期",
+      "type": "joint_leave"
+    },
+    {
+      "date": "2027-03-12",
+      "name_id": "Cuti Bersama Idul Fitri",
+      "name_zh": "开斋节集体假期",
+      "type": "joint_leave"
+    },
+    {
+      "date": "2027-03-15",
+      "name_id": "Cuti Bersama Idul Fitri",
+      "name_zh": "开斋节集体假期",
+      "type": "joint_leave"
+    },
+    {
+      "date": "2027-03-25",
+      "name_id": "Cuti Bersama Wafat Yesus Kristus",
+      "name_zh": "耶稣受难日集体假期",
+      "type": "joint_leave"
+    },
+    {
+      "date": "2027-05-18",
+      "name_id": "Cuti Bersama Idul Adha",
+      "name_zh": "宰牲节集体假期",
+      "type": "joint_leave"
+    },
+    {
+      "date": "2027-05-19",
+      "name_id": "Cuti Bersama Hari Raya Waisak",
+      "name_zh": "卫塞节集体假期",
+      "type": "joint_leave"
+    },
+    {
+      "date": "2027-12-24",
+      "name_id": "Cuti Bersama Natal",
+      "name_zh": "圣诞节集体假期",
+      "type": "joint_leave"
+    }
+  ]
+}
