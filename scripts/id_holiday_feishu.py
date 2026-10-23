@@ -3,7 +3,7 @@
 
 Audience: China-based teammates monitoring Indonesia business and data.
 Reminder offsets (relative to holiday date):
-  +30, +7, +1, 0 (today), -1 (day after holiday).
+  +30, +7, +3, +1, 0 (today), -1 (day after holiday).
 
 Timezone: Asia/Jakarta (WIB). Default schedule: 08:00 WIB via cron.
 """
@@ -36,6 +36,7 @@ WEEKDAY_ID = ("Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu", "Minggu")
 REMINDER_META = {
     30: {"zh_title": "印尼业务假期 · 提前 30 天", "id_title": "Libur bisnis ID · H-30"},
     7: {"zh_title": "印尼业务假期 · 提前 7 天", "id_title": "Libur bisnis ID · H-7"},
+    3: {"zh_title": "印尼业务假期 · 提前 3 天", "id_title": "Libur bisnis ID · H-3"},
     1: {"zh_title": "印尼业务假期 · 明天", "id_title": "Libur bisnis ID · H-1"},
     0: {"zh_title": "印尼业务假期 · 今天", "id_title": "Libur bisnis ID · hari ini"},
     -1: {"zh_title": "印尼业务假期 · 已结束", "id_title": "Libur bisnis ID · selesai"},
@@ -140,6 +141,12 @@ def build_bodies(day_diff: int, holiday: Holiday) -> tuple[str, str]:
         zh = f"下周{wd}（{d}），印尼放假（{name}），请提前安排工作及关注业务变化。"
         idn = (
             f"Minggu depan {wd_id} ({d}), Indonesia libur ({holiday.name_id}). "
+            "Mohon siapkan pekerjaan lebih awal dan pantau perubahan bisnis."
+        )
+    elif day_diff == 3:
+        zh = f"3天后（{wd}，{d}），印尼放假（{name}），请提前安排工作及关注业务变化。"
+        idn = (
+            f"3 hari lagi ({wd_id}, {d}), Indonesia libur ({holiday.name_id}). "
             "Mohon siapkan pekerjaan lebih awal dan pantau perubahan bisnis."
         )
     elif day_diff == 1:
